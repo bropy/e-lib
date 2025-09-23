@@ -1,19 +1,26 @@
 import { type FC } from 'react'
+import { HydrationBoundary, dehydrate } from '@tanstack/react-query'
 import { HomeModule } from './modules'
+import { getQueryClient } from './shared/utils/query-client'
+import { popularBooksQueryOptions } from './shared/api/book-queries'
 
-// Enable dynamic rendering for real-time updates
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-static'
+export const revalidate = 300 // 5 minutes
 
-// interface
 interface IProps {
   params: Promise<{ locale: string }>
 }
 
-// component
 const Page: FC<Readonly<IProps>> = async () => {
-  // For real-time updates, we skip server-side prefetching
-  // and let the client handle all data fetching
-  return <HomeModule />
+  const queryClient = getQueryClient()
+  
+  await queryClient.prefetchQuery(popularBooksQueryOptions())
+  
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <HomeModule />
+    </HydrationBoundary>
+  )
 }
 
 export default Page

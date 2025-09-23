@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "📚 E-Library Demo - Next.js + TanStack Query + Zustand",
-  description: "A modern e-library demo showcasing server-side caching, client-side state management, and real-time interactions with Next.js 15, TanStack Query, and Zustand.",
+  title: "E-Library - Discover Your Next Great Read",
+  description: "Browse and discover books from our extensive digital library. Find your next favorite book today.",
 };
 
 export default function RootLayout({

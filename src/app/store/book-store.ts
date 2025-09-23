@@ -11,18 +11,15 @@ export interface Comment {
 }
 
 interface BookStore {
-  // Simple liked books array instead of Set
   likedBooks: string[];
   comments: Comment[];
   
-  // Actions
   toggleLike: (bookKey: string) => void;
   isLiked: (bookKey: string) => boolean;
   addComment: (comment: Omit<Comment, 'id' | 'createdAt'>) => void;
   getCommentsForBook: (bookKey: string) => Comment[];
 }
 
-// Simple Zustand store without persistence complexity
 export const useBookStore = create<BookStore>((set, get) => ({
   likedBooks: [],
   comments: [],

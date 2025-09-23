@@ -1,19 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Input, Card, CardBody, Image, Skeleton, Button } from '@heroui/react';
-import { openLibraryService, type Book } from '../services/openlibrary.service';
+import { Input, Card, CardBody, Image, Skeleton } from '@heroui/react';
+import { openLibraryService, type Book } from '../shared/services/openlibrary.service';
+import { searchBooksQueryOptions } from '../shared/api/book-queries';
 import { useRouter } from 'next/navigation';
-import { SearchIcon } from './icons';
+import { SearchIcon } from 'lucide-react';
 
 const BookSearch = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const router = useRouter();
 
-  // Debounce search query
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery);
     }, 500);
@@ -22,10 +22,8 @@ const BookSearch = () => {
   }, [searchQuery]);
 
   const { data: searchResults, isLoading, error } = useQuery({
-    queryKey: ['search-books', debouncedQuery],
-    queryFn: () => openLibraryService.searchBooks(debouncedQuery),
+    ...searchBooksQueryOptions(debouncedQuery),
     enabled: debouncedQuery.length > 2,
-    staleTime: 30 * 60 * 1000, // 30 minutes
   });
 
   const handleBookClick = (book: Book) => {
@@ -46,11 +44,6 @@ const BookSearch = () => {
             size="lg"
             className="shadow-sm"
           />
-          {debouncedQuery.length > 0 && (
-            <div className="absolute -bottom-6 left-0 text-sm text-gray-500">
-              🔍 Searching for "{debouncedQuery}"...
-            </div>
-          )}
         </div>
       </div>
 
@@ -66,7 +59,7 @@ const BookSearch = () => {
         <div className="space-y-6">
           <div className="text-center">
             <h3 className="text-2xl font-bold text-gray-900">
-              Search Results for "{debouncedQuery}"
+              Search Results for &quot;{debouncedQuery}&quot;
             </h3>
             {searchResults && (
               <p className="text-gray-600 mt-2">
@@ -131,7 +124,7 @@ const BookSearch = () => {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500">No books found for "{debouncedQuery}"</p>
+              <p className="text-gray-500">No books found for &quot;{debouncedQuery}&quot;</p>
             </div>
           )}
         </div>

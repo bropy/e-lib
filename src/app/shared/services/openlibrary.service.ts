@@ -17,7 +17,6 @@ export interface OpenLibraryResponse {
 export const openLibraryService = {
   async getPopularBooks(): Promise<Book[]> {
     try {
-      // Array of different search topics to rotate through
       const searchTopics = [
         'fiction',
         'science',
@@ -31,39 +30,14 @@ export const openLibraryService = {
         'classic'
       ];
       
-      // Use current time to rotate through different topics every 30 seconds
       const topicIndex = Math.floor(Date.now() / 30000) % searchTopics.length;
       const currentTopic = searchTopics[topicIndex];
-      
-      console.log(`🔄 Fetching books for topic: ${currentTopic} at ${new Date().toLocaleTimeString()}`);
       
       const response = await fetch(
         `https://openlibrary.org/search.json?subject=${currentTopic}&sort=rating desc&limit=10&fields=key,title,author_name,cover_i,first_publish_year,edition_count,subject`,
         {
-          // Remove Next.js caching to allow real-time updates
-          cache: 'no-store'
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: OpenLibraryResponse = await response.json();
-      return data.docs;
-    } catch (error) {
-      console.error('Error fetching popular books:', error);
-      throw error;
-    }
-  },
-
-  async searchBooks(query: string): Promise<Book[]> {
-    try {
-      const response = await fetch(
-        `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=20&fields=key,title,author_name,cover_i,first_publish_year,edition_count,subject`,
-        {
           next: { 
-            revalidate: 1800 // Cache for 30 minutes
+            revalidate: 300
           }
         }
       );
@@ -75,7 +49,28 @@ export const openLibraryService = {
       const data: OpenLibraryResponse = await response.json();
       return data.docs;
     } catch (error) {
-      console.error('Error searching books:', error);
+      throw error;
+    }
+  },
+
+  async searchBooks(query: string): Promise<Book[]> {
+    try {
+      const response = await fetch(
+        `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=20&fields=key,title,author_name,cover_i,first_publish_year,edition_count,subject`,
+        {
+          next: { 
+            revalidate: 1800
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: OpenLibraryResponse = await response.json();
+      return data.docs;
+    } catch (error) {
       throw error;
     }
   },
@@ -86,7 +81,7 @@ export const openLibraryService = {
         `https://openlibrary.org/search.json?q=key:${key}&fields=key,title,author_name,cover_i,first_publish_year,edition_count,subject`,
         {
           next: { 
-            revalidate: 86400 // Cache for 24 hours
+            revalidate: 86400
           }
         }
       );
@@ -98,7 +93,6 @@ export const openLibraryService = {
       const data: OpenLibraryResponse = await response.json();
       return data.docs[0] || null;
     } catch (error) {
-      console.error('Error fetching book:', error);
       throw error;
     }
   },

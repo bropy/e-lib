@@ -1,13 +1,14 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardBody, CardHeader, Image, Chip, Button, Textarea, Divider } from '@heroui/react';
+import { Card, CardBody, CardHeader, Image, Chip, Button, Textarea, Divider, Input } from '@heroui/react';
 import { useForm } from 'react-hook-form';
-import { openLibraryService, type Book } from '../../services/openlibrary.service';
-import { useBookStore, type Comment } from '../../store/book-store';
-import { HeartIcon, ArrowLeftIcon } from '../../components/icons';
+import { openLibraryService } from '../../../shared/services/openlibrary.service';
+import { useBookStore, type Comment } from '../../../store/book-store';
+import { HeartIcon, ArrowLeftIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import ContainerComponent from '../../shared/ui/container.component';
+import ContainerComponent from '../../../shared/ui/container.component';
+import { bookDetailQueryOptions } from '../../../shared/api/book-queries';
 
 interface CommentForm {
   author: string;
@@ -22,11 +23,7 @@ const BookDetailClient = ({ bookKey }: BookDetailClientProps) => {
   const router = useRouter();
   const { toggleLike, isLiked, addComment, getCommentsForBook } = useBookStore();
   
-  const { data: book, isLoading, error, dataUpdatedAt, isFetching } = useQuery({
-    queryKey: ['book-detail', bookKey],
-    queryFn: () => openLibraryService.getBookByKey(bookKey),
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
-  });
+  const { data: book, isLoading } = useQuery(bookDetailQueryOptions(bookKey));
 
   const {
     register,
@@ -49,47 +46,20 @@ const BookDetailClient = ({ bookKey }: BookDetailClientProps) => {
   if (isLoading) {
     return (
       <ContainerComponent className="w-full py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="flex flex-col lg:flex-row gap-8">
-            <div className="w-full lg:w-1/3">
-              <div className="h-96 bg-gray-200 rounded-lg"></div>
-            </div>
-            <div className="w-full lg:w-2/3 space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-20 bg-gray-200 rounded"></div>
-            </div>
-          </div>
+        <div className="flex justify-center items-center min-h-64">
+          <p className="text-gray-600">Loading...</p>
         </div>
       </ContainerComponent>
     );
   }
 
-  if (error || !book) {
-    return (
-      <ContainerComponent className="w-full py-8">
-        <Card className="bg-red-50 border-red-200">
-          <CardBody>
-            <p className="text-red-600 text-center">Book not found or failed to load.</p>
-            <Button 
-              color="primary" 
-              variant="light" 
-              onPress={() => router.back()}
-              className="mt-4 mx-auto"
-            >
-              Go Back
-            </Button>
-          </CardBody>
-        </Card>
-      </ContainerComponent>
-    );
+  if (!book) {
+    return null;
   }
 
   return (
     <ContainerComponent className="w-full py-8 space-y-8">
-      {/* Back Button & Cache Status */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center">
         <Button
           variant="light"
           startContent={<ArrowLeftIcon />}
@@ -97,24 +67,9 @@ const BookDetailClient = ({ bookKey }: BookDetailClientProps) => {
         >
           Back to Books
         </Button>
-        
-        <div className="flex items-center gap-2">
-          {isFetching && (
-            <Chip size="sm" color="warning" variant="flat">
-              🔄 Loading...
-            </Chip>
-          )}
-          {dataUpdatedAt && (
-            <Chip size="sm" color="primary" variant="flat">
-              💾 Client Cached
-            </Chip>
-          )}
-        </div>
       </div>
 
-      {/* Book Details */}
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Book Cover */}
         <div className="w-full lg:w-1/3">
           <Card className="h-fit">
             <CardBody className="p-0">
@@ -136,7 +91,6 @@ const BookDetailClient = ({ bookKey }: BookDetailClientProps) => {
           </Card>
         </div>
 
-        {/* Book Info */}
         <div className="w-full lg:w-2/3 space-y-6">
           <div className="space-y-4">
             <div className="flex items-start justify-between">
@@ -191,11 +145,9 @@ const BookDetailClient = ({ bookKey }: BookDetailClientProps) => {
 
       <Divider />
 
-      {/* Comments Section */}
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-gray-900">Comments</h2>
 
-        {/* Add Comment Form */}
         <Card>
           <CardHeader>
             <h3 className="text-lg font-semibold">Leave a Comment</h3>
@@ -203,7 +155,7 @@ const BookDetailClient = ({ bookKey }: BookDetailClientProps) => {
           <CardBody>
             <form onSubmit={handleSubmit(onSubmitComment)} className="space-y-4">
               <div>
-                <input
+                <Input
                   {...register('author', { 
                     required: 'Name is required',
                     minLength: { value: 2, message: 'Name must be at least 2 characters' }
@@ -243,7 +195,6 @@ const BookDetailClient = ({ bookKey }: BookDetailClientProps) => {
           </CardBody>
         </Card>
 
-        {/* Comments List */}
         <div className="space-y-4">
           {comments.length === 0 ? (
             <Card>
