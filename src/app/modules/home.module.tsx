@@ -1,14 +1,43 @@
 'use client'
-import { type FC } from 'react'
-import { Card, CardBody, Chip } from '@heroui/react'
+import { type FC, useEffect, useState } from 'react'
+import { Card, CardBody } from '@heroui/react'
 import ContainerComponent from '../shared/ui/container.component'
 import BookSearch from '../components/book-search.component'
 import PopularBooks from '../components/popular-books.component'
 import { useBookStore } from '../store/book-store'
+import { showBookSearchFlag } from '@/flags'
 
 //component
 const HomeModule: FC = () => {
   const { likedBooks, comments } = useBookStore()
+  const [showBookSearch, setShowBookSearch] = useState(false)
+
+  useEffect(() => {
+    const loadFeatureFlag = async () => {
+      try {
+        const enabled = await showBookSearchFlag()
+        setShowBookSearch(enabled)
+      } catch (error) {
+        console.warn('Failed to load feature flag:', error)
+        setShowBookSearch(false)
+      }
+    }
+
+    loadFeatureFlag()
+
+    const handleFocus = () => {
+      loadFeatureFlag()
+    }
+
+    const interval = setInterval(loadFeatureFlag, 30000)
+
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      clearInterval(interval)
+    }
+  }, [])
   
   // return
   return (
@@ -42,8 +71,9 @@ const HomeModule: FC = () => {
         )}
       </div>
 
-      <BookSearch />
       <PopularBooks />
+      
+      {showBookSearch && <BookSearch />}
     </ContainerComponent>
   )
 }
